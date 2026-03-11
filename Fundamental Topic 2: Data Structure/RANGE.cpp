@@ -30,7 +30,6 @@ const int M2=1e9+9013;
 const int base1=1e6+33;
 const int base2=1e6+37;
 const int N=2e5+5;
-const int B=450;
 ll f1(ll x) {
     x=x%M1+0x9eb779b9%M1;
     x%=M1;
@@ -61,53 +60,62 @@ struct pair_hash{
 };
 
 //ACTUAL CODE HERE
-ll block_val[B];
-int ID[N], L[B], R[B], cntblock;
-int A[N],n,q;
-void update(int p,int val) {
-    block_val[ID[p]]-=A[p];
-    A[p]=val;
-    block_val[ID[p]]+=A[p];
-}
-ll get(int l,int r) {
-    ll res=0;
-    for(int i=1;i<=cntblock;++i) {
-        if (r<L[i]||R[i]<l) continue;
-        if (l<=L[i]&&R[i]<=r) {
-            res+=block_val[i];
-        }
-        else {
-            for(int j=max(L[i],l);j<=min(R[i],r);++j) {
-                res+=A[j];
-            }
-        }
+
+struct SegmentTree{
+    vector<ll> st,lazy;
+    SegmentTree(int n): st(4*n), lazy(4*n) {}
+    void propagate(int id,int l,int r) {
+        int mid=l+r >>1;
+        st[id*2]+=(mid-l+1)*lazy[id];
+        st[id*2+1]+=(r-mid)*lazy[id];
+        lazy[id*2]+=lazy[id];
+        lazy[id*2+1]+=lazy[id];
+        lazy[id]=0;
     }
-    return res;
-}
+    void update(int id,int l,int r,int u,int v,ll val) {
+        if (r<u||v<l) return;
+        if (u<=l&&r<=v) {
+            st[id]+=(r-l+1)*val;
+            lazy[id]+=val;
+            return;
+        }
+        propagate(id,l,r);
+        int mid=l+r >>1;
+        update(id*2,l,mid,u,v,val);
+        update(id*2+1,mid+1,r,u,v,val);
+        st[id]=st[id*2]+st[id*2+1];
+    }
+    ll get(int id,int l,int r,int u,int v) {
+        if (r<u||v<l) return 0;
+        if (u<=l&&r<=v) return st[id];
+        propagate(id,l,r);
+        int mid=l+r >>1;
+        return get(id*2,l,mid,u,v)+get(id*2+1,mid+1,r,u,v);
+    }
+};
+int n,q;
+int A[N];
 void solve() {
     cin>>n>>q;
+    SegmentTree st1(n+5);
     for(int i=1;i<=n;++i) {
         cin>>A[i];
-        if (i%B==1) {
-            ++cntblock;
-            L[cntblock]=i;
-        }
-        R[cntblock]=i;
-        ID[i]=cntblock;
-        block_val[cntblock]+=A[i];
+        st1.update(1,1,n,i,i,A[i]);
     }
     while(q--) {
         int type;cin>>type;
         if (type==1) {
-            int p,val;cin>>p>>val;
-            update(p,val);
+            int p;
+            ll val;
+            cin>>p>>val;
+            st1.update(1,1,n,p,p,val-A[p]);
+            A[p]=val;
         }
         else {
             int l,r;cin>>l>>r;
-            cout<<get(l,r)<<'\n';
+            cout<<st1.get(1,1,n,l,r)<<'\n';
         }
     }
-
 }
 signed main() {
     freopen("RANGE.INP","r",stdin);
