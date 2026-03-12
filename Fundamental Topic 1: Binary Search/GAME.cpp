@@ -48,7 +48,16 @@ ll f2(ll x) {
     x^=(x>>16);
     return x;
 }
-//ACTUAL CODE HERE
+struct int_hash{
+    size_t operator()(const int &x) const {
+        return f1(x);
+    }
+};
+struct pair_hash{
+    size_t operator()(const pair<int,int> &p) const {
+        return (f1(p.fi) ^ (f2(p.se)<<1ll));
+    }
+};
 int n;
 int A[N], B[N];
 void solve() {
