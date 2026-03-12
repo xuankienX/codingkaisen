@@ -58,6 +58,7 @@ struct pair_hash{
         return (f1(p.fi) ^ (f2(p.se)<<1ll));
     }
 };
+// ACTUAL CODE HERE
 int n;
 int A[N], B[N];
 void solve() {
